@@ -1,0 +1,252 @@
+<!-- index.html corrigido -->
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora de Precificação</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <header>
+      <nav class="navbar">
+        <button onclick="showTab('pratos')" class="nav-btn active">
+          <i class="fas fa-utensils"></i><span>Pratos</span>
+        </button>
+        <button onclick="showTab('funcionarios')" class="nav-btn">
+          <i class="fas fa-user-friends"></i><span>Funcionários</span>
+        </button>
+        <button onclick="showTab('contas')" class="nav-btn">
+          <i class="fas fa-file-invoice-dollar"></i><span>Contas</span>
+        </button>
+        <button onclick="showTab('resumo')" class="nav-btn">
+          <i class="fas fa-chart-line"></i><span>Resumo</span>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="pratos" class="tab active">
+        <div class="tab-header">
+          <h2>Pratos e Bebidas</h2>
+          <div class="form-row">
+            <label>
+              Categoria:
+              <select id="categoriaSelecionada">
+                <option value="Entradas">Entradas</option>
+                <option value="Guarnições">Guarnições</option>
+                <option value="Pratos">Pratos (servem 2 pessoas)</option>
+                <option value="Massas">Massas (prato individual)</option>
+                <option value="Sobremesas">Sobremesas</option>
+                <option value="Bebidas">Bebidas</option>
+              </select>
+
+              <label id="subcategoria-container" style="display: none">
+                Subcategoria (Bebidas):
+                <select id="subcategoriaSelecionada">
+                  <option value="Cachaças">Cachaças (doses)</option>
+                  <option value="Caipirinhas">Caipirinhas</option>
+                  <option value="Cervejas">Cervejas</option>
+                  <option value="Refrigerantes">Refrigerantes</option>
+                  <option value="Sucos">Sucos</option>
+                </select>
+              </label>
+            <button class="add" onclick="openModalAdicionarPrato()">
+              <i class="fas fa-plus"></i> Adicionar
+            </button>
+          </div>
+        </div>
+        <div id="pratos-container"></div>
+      </section>
+
+      <section id="funcionarios" class="tab">
+        <h2>Funcionários</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Salário (R$)</th>
+                <th>Quantidade</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="funcionarios-body"></tbody>
+          </table>
+        </div>
+        <button class="add" onclick="adicionarFuncionario()">
+          <i class="fas fa-user-plus"></i> Adicionar Funcionário
+        </button>
+      </section>
+
+      <section id="contas" class="tab">
+        <h2>Contas Fixas</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Conta</th>
+                <th>Valor (R$)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="contas-body"></tbody>
+          </table>
+        </div>
+        <button class="add" onclick="adicionarConta()">
+          <i class="fas fa-file-invoice"></i> Adicionar Conta
+        </button>
+      </section>
+
+      <section id="resumo" class="tab">
+        <h2>Resumo</h2>
+        <div class="form-grid">
+          <label
+            >Margem de lucro (%)
+            <input
+              id="margemLucro"
+              type="number"
+              value="100"
+              onchange="salvar()"
+              class="no-spin"
+            />
+          </label>
+          <label
+            >Proporção deste prato nas vendas (%)
+            <input
+              id="proporcaoGastos"
+              type="number"
+              step="0.01"
+              onchange="salvar()"
+              class="no-spin"
+            />
+          </label>
+          <label
+            >Quantidade vendida
+            <input
+              id="quantidadeVendida"
+              type="number"
+              onchange="salvar()"
+              class="no-spin"
+            />
+          </label>
+        </div>
+
+        <h3>Análise por Prato</h3>
+        <label
+          >Selecione o prato:
+          <select
+            id="pratoSelecionado"
+            onchange="salvarPratoSelecionadoResumo()"
+          >
+            <option value="-1">Todos os pratos (média)</option>
+          </select>
+        </label>
+
+        <h3>Totais</h3>
+        <p>Total de Gastos Fixos: <span id="totalFixos">R$ 0,00</span></p>
+        <p>
+          Adicional por prato (proporcional):
+          <span id="adicionalPorPrato">R$ 0,00</span>
+        </p>
+        <p>
+          Custo total do prato selecionado:
+          <span id="custoPratoSelecionado">R$ 0,00</span>
+        </p>
+        <p>Preço sugerido (com margem): <span id="precoFinal">R$ 0,00</span></p>
+
+        <div class="detalhes-calculo">
+          <p class="formula">
+            (Custo do Prato + Adicional Proporcional) × (1 + Margem)
+          </p>
+          <p><span id="detalheFormula"></span></p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Adicionar Prato -->
+    <div id="modalAdicionarPrato" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="fecharModalAdicionarPrato()">&times;</span>
+        <h2>Adicionar Novo Prato</h2>
+
+        <label for="nomePratoInput">Nome do Prato:</label>
+        <input type="text" id="nomePratoInput" placeholder="Ex: Feijoada" />
+
+        <label for="categoriaSelect">Categoria:</label>
+        <select id="categoriaSelect" onchange="atualizarSubcategoriasModal()">
+          <option value="Entradas">Entradas</option>
+          <option value="Guarnições">Guarnições</option>
+          <option value="Pratos">Pratos (servem 2 pessoas)</option>
+          <option value="Massas">Massas (prato individual)</option>
+          <option value="Sobremesas">Sobremesas</option>
+          <option value="Bebidas">Bebidas</option>
+        </select>
+
+        <label for="subcategoriaSelect" id="subcategoriaSelectLabel" style="display: none">Subcategoria:</label>
+        <select id="subcategoriaSelect" style="display: none"></select>
+
+        <button onclick="adicionarPratoViaModal()">Adicionar</button>
+      </div>
+    </div>
+    <script src="js/script.js"></script>
+    <script>
+      const catSelect = document.getElementById("categoriaSelecionada");
+      const subcatContainer = document.getElementById("subcategoria-container");
+      catSelect.addEventListener("change", () => {
+        subcatContainer.style.display =
+          catSelect.value === "Bebidas" ? "block" : "none";
+      });
+
+      function atualizarSubcategoriasModal() {
+      const categoria = document.getElementById("categoriaSelect").value;
+      const subcategoriaSelect = document.getElementById("subcategoriaSelect");
+      const subcategoriaLabel = document.getElementById("subcategoriaSelectLabel");
+
+      subcategoriaSelect.innerHTML = "";
+
+      const subcategorias =
+        categoria === "Pratos"
+        ? ["Carne", "Frango", "Peixe", "Vegetariano"]
+        : categoria === "Bebidas"
+        ? ["Cachaças", "Caipirinhas", "Cervejas", "Refrigerantes", "Sucos"] // Adicionadas as novas subcategorias
+        : ["Fritas", "Petiscos", "Queijos"];
+
+      subcategorias.forEach((sub) => {
+      const option = document.createElement("option");
+      option.value = sub;
+      option.textContent = sub;
+      subcategoriaSelect.appendChild(option);
+      });
+
+      const exibir = categoria === "Bebidas" || categoria === "Porções";
+      subcategoriaSelect.style.display = subcategoriaLabel.style.display =
+        exibir ? "block" : "none";
+
+      categoriaSelecionadaModal = categoria;
+      subcategoriaSelecionadaModal = subcategorias[0];
+    }
+
+      document
+        .getElementById("subcategoriaSelect")
+        .addEventListener("change", function () {
+          subcategoriaSelecionadaModal = this.value;
+        });
+
+      // Fechar modal ao clicar no overlay (fora do conteúdo)
+      document
+        .getElementById("modalAdicionarPrato")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            fecharModalAdicionarPrato();
+          }
+        });
+    </script>
+  </body>
+</html>
